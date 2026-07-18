@@ -29,10 +29,12 @@ export class EventBus<TEventMap extends object> {
   private readonly subscribers = new Map<string, Set<EventSubscriber<string, unknown>>>()
   private readonly middleware = new Set<EventMiddleware<TEventMap>>()
   private readonly history: AnyHunterEvent<TEventMap>[] = []
+  private readonly observers = new Set<(event: AnyHunterEvent<TEventMap>) => void>()
   private readonly maximumQueueSize: number
   private readonly maximumHistorySize: number
   private queue: QueuedEvent<TEventMap>[] = []
   private sequence = 0
+  private flushScheduled = false
 
   public constructor({ maximumQueueSize = 100, maximumHistorySize = 100 } = {}) {
     this.maximumQueueSize = maximumQueueSize
@@ -53,10 +55,12 @@ export class EventBus<TEventMap extends object> {
     }
 
     this.queue.push({ event, sequence: this.sequence++ })
+    this.scheduleFlush()
     return event
   }
 
   public flush(): void {
+    this.flushScheduled = false
     this.queue
       .sort(
         (first, second) =>
@@ -103,6 +107,12 @@ export class EventBus<TEventMap extends object> {
     return () => this.middleware.delete(middleware)
   }
 
+  /** Observes successfully dispatched events without subscribing to one event type. */
+  public observe(observer: (event: AnyHunterEvent<TEventMap>) => void): () => void {
+    this.observers.add(observer)
+    return () => this.observers.delete(observer)
+  }
+
   public clear(): void {
     this.queue = []
     this.history.splice(0)
@@ -146,5 +156,12 @@ export class EventBus<TEventMap extends object> {
         // Subscribers are intentionally isolated to preserve event propagation.
       }
     })
+    this.observers.forEach((observer) => observer(event))
+  }
+
+  private scheduleFlush(): void {
+    if (this.flushScheduled) return
+    this.flushScheduled = true
+    queueMicrotask(() => this.flush())
   }
 }

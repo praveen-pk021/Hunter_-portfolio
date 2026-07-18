@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import { App } from '@/App'
 
 describe('App', () => {
-  it('renders the foundation readiness screen', () => {
+  it('boots into the portfolio scene', async () => {
     render(<App />)
-    expect(screen.getByRole('heading', { name: 'Hunter System Foundation Ready' })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: /K\. Praveen Kumar/i })).toBeVisible()
   })
 })

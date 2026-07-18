@@ -47,6 +47,11 @@ export interface HunterSystemEventMap {
   HunterRegistered: Record<string, never>
   ArchiveOpened: { recordId: string }
   ArchiveCompleted: Record<string, never>
+  AscensionEntered: Record<string, never>
+  MilestoneHovered: { milestoneId: string }
+  MilestoneOpened: { milestoneId: string }
+  TimelineCompleted: Record<string, never>
+  TransmissionUnlocked: Record<string, never>
   SkillHovered: { skillId: string }
   SkillSelected: { skillId: string }
   SkillUnlocked: { skillId: string }
